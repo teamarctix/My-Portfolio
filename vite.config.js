@@ -8,4 +8,5 @@ export default defineConfig({
     host: '0.0.0.0',         // Accept connections from any IP
     allowedHosts: 'all',     // Allow all external hosts (e.g. *.ngrok-free.app)
   },
+  base: "/My-Portfolio"
 })
