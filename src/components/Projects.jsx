@@ -1,16 +1,35 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { projects } from "../constants/projects";
 
 const Projects = () => {
   const isMobile = window.innerWidth < 768;
   const initialCount = isMobile ? 3 : 6;
   const [visibleCount, setVisibleCount] = useState(initialCount);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const modalRef = useRef(null);
+
   const hasMore = visibleCount < projects.length;
-
-  const loadMore = () => setVisibleCount(projects.length);
-
   const visibleProjects = projects.slice(0, visibleCount);
   const nextProject = projects[visibleCount];
+
+  const loadMore = () => setVisibleCount(projects.length);
+  const handleCardClick = (proj) => setSelectedProject(proj);
+  const closeModal = () => setSelectedProject(null);
+
+  // Close on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        closeModal();
+      }
+    };
+    if (selectedProject) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [selectedProject]);
 
   return (
     <section
@@ -37,40 +56,22 @@ const Projects = () => {
         {visibleProjects.map((proj, i) => (
           <div
             key={i}
-            className="bg-gray-50 dark:bg-[#272757] border border-gray-200 dark:border-[#505081] p-6 rounded-xl shadow-sm hover:shadow-md transition"
+            onClick={() => handleCardClick(proj)}
+            className="cursor-pointer bg-gray-50 dark:bg-[#272757] border border-gray-200 dark:border-[#505081] p-6 rounded-xl shadow-sm hover:shadow-md transition"
           >
             <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
               {proj.title}
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
+            <p className="text-gray-600 dark:text-gray-300 text-sm mt-2 line-clamp-2">
               {proj.description}
             </p>
             <p className="text-xs mt-2 text-gray-500 dark:text-gray-400 italic">
               {proj.tech.join(", ")}
             </p>
-
-            <div className="mt-4 flex space-x-4">
-              <a
-                href={proj.live}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm underline text-[#272757] dark:text-[#8686AC] hover:opacity-80 transition"
-              >
-                Live
-              </a>
-              <a
-                href={proj.code}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm underline text-[#272757] dark:text-[#8686AC] hover:opacity-80 transition"
-              >
-                GitHub
-              </a>
-            </div>
           </div>
         ))}
 
-        {/* Blurred next project preview on mobile */}
+        {/* Blurred 4th project preview on mobile */}
         {hasMore && isMobile && nextProject && (
           <div className="relative overflow-hidden rounded-xl border border-dashed border-gray-400 dark:border-[#505081]">
             <div className="backdrop-blur-sm bg-white/60 dark:bg-[#0f0e47]/60 absolute inset-0 z-10 flex items-center justify-center">
@@ -106,6 +107,50 @@ const Projects = () => {
           >
             View All Projects
           </button>
+        </div>
+      )}
+
+      {/* Project Modal */}
+      {selectedProject && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4">
+          <div
+            ref={modalRef}
+            className="bg-white dark:bg-[#272757] max-w-lg w-full p-6 rounded-xl shadow-xl relative"
+          >
+            <button
+              onClick={closeModal}
+              className="absolute top-3 right-4 text-2xl text-gray-400 hover:text-red-500"
+            >
+              &times;
+            </button>
+            <h3 className="text-2xl font-bold text-[#272757] dark:text-white mb-4">
+              {selectedProject.title}
+            </h3>
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+              {selectedProject.description}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 italic mb-4">
+              Tech Stack: {selectedProject.tech.join(", ")}
+            </p>
+            <div className="flex space-x-4">
+              <a
+                href={selectedProject.live}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm underline text-[#272757] dark:text-[#8686AC] hover:opacity-80 transition"
+              >
+                Live Demo
+              </a>
+              <a
+                href={selectedProject.code}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm underline text-[#272757] dark:text-[#8686AC] hover:opacity-80 transition"
+              >
+                GitHub Repo
+              </a>
+            </div>
+          </div>
         </div>
       )}
     </section>
